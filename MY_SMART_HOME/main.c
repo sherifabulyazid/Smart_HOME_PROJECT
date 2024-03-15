@@ -216,6 +216,9 @@ int main (void)
 					else
 					{
 						LCD_SendString("NOT ACCESSIBLE!");
+						LCD_ClearDisplay();
+						_delay_ms(2);
+
 					}
 					break;
 				case '8':
@@ -230,6 +233,8 @@ int main (void)
 					else
 					{
 						LCD_SendString("NOT ACCESSIBLE!");
+						LCD_ClearDisplay();
+						_delay_ms(2);
 					}
 					break;
 				default:
@@ -371,7 +376,7 @@ void add_user(void)
 	UART_recieve_string(passReal);
 	/*Read from mobile and save it in password array*/
 	/*Save the password in EEPROM*/
-	EEPROM_voidSend4Numbers( USER_PASS_LOCATION+10*usersCounter , passReal , 4);
+	EEPROM_voidSend4Numbers( USER_PASS_LOCATION+0x10*usersCounter , passReal , 4);
 }
 uint8 checkLatestUser(void)
 {
@@ -403,6 +408,7 @@ void RemoveUser(uint8* copy_userID)
 			EEPROM_voidRemoveUser(USER_ID_LOCATION + 0x10* i);
 			LCD_SendString("User's been deleted Successfully");
 			UART_sendString("User's been deleted Successfully");
+			_delay_ms(750);
 			break;
 		}
 	}
