@@ -4,8 +4,8 @@
  *  Created on: Dec 30, 2023
  *      Author: Sherif Abuelyazid
  */
-#include "STD.h"
-#include "BIT_MATH.h"
+#include "../LIBRARIES/STD.h"
+#include "../LIBRARIES/BIT_MATH.h"
 #include "Timer_config.h"
 #include "Timer_registers.h"
 #include "Timer_private.h"
@@ -555,3 +555,68 @@ void Timer1_PWM_Phase_Correct_ICR1(uint16 copy_Req_Freq)
 	/*compare match value "OCR1B" */
 	OCR1BL=TIMER1_COMPARE_MATCH_VALUE_B;
 }
+/*************************************Timer2*****************************************************/
+void Timer2_PWM_Fast(void)
+{
+	CLEARBIT(TCCR2,TCCR2_FOC2);
+	/*Waveform generation MODE : Fast PWM*/
+	SETBIT(TCCR2,TCCR2_WGM20);
+	SETBIT(TCCR2,TCCR2_WGM21);
+
+	/* Output Mode */
+	CLEARBIT(TCCR2,TCCR2_COM20);
+	CLEARBIT(TCCR2,TCCR2_COM21);
+	TCCR2 |=OC2_PWM_MODE;
+
+	/*Clock Select*/
+	CLEARBIT(TCCR2,TCCR2_CS20);
+	CLEARBIT(TCCR2,TCCR2_CS21);
+	CLEARBIT(TCCR2,TCCR2_CS22);
+	TCCR2 |=CLOCKSELECT;
+
+	/*set compare match value*/
+	OCR2 = TIMER2_COMPARE_MATCH_VALUE;
+
+}
+
+void Timer2_PWM_Phase_Correct(void)
+{
+	/*force output compare =0*/
+	CLEARBIT(TCCR2,TCCR2_FOC2);
+	/*Waveform generation MODE: PWM_Phase_Correct */
+	SETBIT(TCCR2,TCCR2_WGM20);
+	CLEARBIT(TCCR2,TCCR2_WGM21);
+	/*Output Mode*/
+	CLEARBIT(TCCR2,TCCR2_COM20);
+	CLEARBIT(TCCR2,TCCR2_COM21);
+	TCCR2 |= OC2_PWM_MODE;
+	/*Clock Select*/
+	CLEARBIT(TCCR2,TCCR2_CS20);
+	CLEARBIT(TCCR2,TCCR2_CS21);
+	CLEARBIT(TCCR2,TCCR2_CS22);
+	TCCR2 |=CLOCKSELECT;
+	/*set compare match value*/
+	OCR2= TIMER2_COMPARE_MATCH_VALUE;
+}
+void Timer2_PWM_Controllable(uint8 copy_Val)
+{
+	CLEARBIT(TCCR2,TCCR2_FOC2);
+	/*Waveform generation MODE : Fast PWM*/
+	SETBIT(TCCR2,TCCR2_WGM20);
+	SETBIT(TCCR2,TCCR2_WGM21);
+
+	/* Output Mode */
+	CLEARBIT(TCCR2,TCCR2_COM20);
+	CLEARBIT(TCCR2,TCCR2_COM21);
+	TCCR2 |=OC2_PWM_MODE;
+
+	/*Clock Select*/
+	CLEARBIT(TCCR2,TCCR2_CS20);
+	CLEARBIT(TCCR2,TCCR2_CS21);
+	CLEARBIT(TCCR2,TCCR2_CS22);
+	TCCR2 |=CLOCKSELECT;
+
+	/*set compare match value*/
+	OCR2 = copy_Val;
+}
+

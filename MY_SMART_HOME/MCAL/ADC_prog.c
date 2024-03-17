@@ -1,13 +1,12 @@
 /**********************************************************
-*Author: Mahmoud Khaled Alnmr
+*Author: Sherif
 *SWC:
 *Layer:
 *Version:
 ***********************************************************/
 
-
-#include "Library/STD_TYPES.h"
-#include "Library/BIT_MATH.h"
+#include "../LIBRARIES/STD.h"
+#include "../LIBRARIES/BIT_MATH.h"
 
 #include "ADC_registers.h"
 #include "ADC_config.h"
@@ -19,86 +18,86 @@ static uint8* ADC_puint8_Reading = NULL;
 static void (*ADC_pv_CallBackNotification)(void) = NULL;
 uint8 ADC_uint8_BusyState = ADC_NOTBUSY;
 /*global variable to set the ADC Asynch source*/
-static uint8 ADC_uint8_ADCISRSource = STD_LOW;
+static uint8 ADC_uint8_ADCISRSource = LOW;
 
 void ADC_init(void)
 {
-	/*choosind the reference voltage*/
+	/*choosing the reference voltage*/
 #if VOLTAGR_REF == AREF
-	CLR_BIT(ADMUX, REFS1);
-	CLR_BIT(ADMUX, REFS0);
+	CLEARBIT(ADMUX, REFS1);
+	CLEARBIT(ADMUX, REFS0);
 #elif VOLTAGR_REF==AVCC_WITH_CAP
-	CLR_BIT(ADMUX, REFS1);
-	SET_BIT(ADMUX, REFS0);
+	CLEARBIT(ADMUX, REFS1);
+	SETBIT(ADMUX, REFS0);
 #elif VOLTAGR_REF==INTERNAL_VREF
-	SET_BIT(ADMUX, REFS1);
-	SET_BIT(ADMUX, REFS0);
+	SETBIT(ADMUX, REFS1);
+	SETBIT(ADMUX, REFS0);
 #endif
 
 #if  ADC_RESOLUTION_MODE==ADC_RESOLUTION_8_BITS
 	/*setting the bits for Left adjust*/
-	SET_BIT(ADMUX, ADCLAR);
+	SETBIT(ADMUX, ADCLAR);
 #elif ADC_RESOLUTION_MODE==ADC_RESOLUTION_10_BITS
-		CLR_BIT(ADMUX, ADCLAR);
+		CLEARBIT(ADMUX, ADCLAR);
 #endif
 	
 #if ADC_CONVERSION_MODE	== ADC_SINGLE_CONVERSION_MODE
 
 	/*set ADC as single conversion*/
-	CLR_BIT(ADCSRA, ADATE);
+	CLEARBIT(ADCSRA, ADATE);
 #elif ADC_CONVERSION_MODE	== ADC_FREE_RUNNING_MODE
-	SET_BIT(ADCSRA, ADATE);
+	SETBIT(ADCSRA, ADATE);
 
 	#if ADC_AUTO_TRIGGER_SOURCE	== FREE_RUNNING_MODE
-			CLR_BIT(SFIOR,SFIOR_ADTS_2);
-			CLR_BIT(SFIOR,SFIOR_ADTS_1);
-			CLR_BIT(SFIOR,SFIOR_ADTS_0);
+			CLEARBIT(SFIOR,SFIOR_ADTS_2);
+			CLEARBIT(SFIOR,SFIOR_ADTS_1);
+			CLEARBIT(SFIOR,SFIOR_ADTS_0);
 	#elif ADC_AUTO_TRIGGER_SOURCE == ANALOG_COMPARATOR_MODE
-			CLR_BIT(SFIOR,SFIOR_ADTS_2);
-			CLR_BIT(SFIOR,SFIOR_ADTS_1);
-			SET_BIT(SFIOR,SFIOR_ADTS_0);
+			CLEARBIT(SFIOR,SFIOR_ADTS_2);
+			CLEARBIT(SFIOR,SFIOR_ADTS_1);
+			SETBIT(SFIOR,SFIOR_ADTS_0);
 	#elif ADC_AUTO_TRIGGER_SOURCE == EXTERNAL_INTERRUPT_REQ_0
-			CLR_BIT(SFIOR,SFIOR_ADTS_2);
-			SET_BIT(SFIOR,SFIOR_ADTS_1);
-			CLR_BIT(SFIOR,SFIOR_ADTS_0);
+			CLEARBIT(SFIOR,SFIOR_ADTS_2);
+			SETBIT(SFIOR,SFIOR_ADTS_1);
+			CLEARBIT(SFIOR,SFIOR_ADTS_0);
 	#elif ADC_AUTO_TRIGGER_SOURCE == TIMER0_COMPARE_MATCH
-			CLR_BIT(SFIOR,SFIOR_ADTS_2);
-			SET_BIT(SFIOR,SFIOR_ADTS_1);
-			SET_BIT(SFIOR,SFIOR_ADTS_0);
+			CLEARBIT(SFIOR,SFIOR_ADTS_2);
+			SETBIT(SFIOR,SFIOR_ADTS_1);
+			SETBIT(SFIOR,SFIOR_ADTS_0);
 	#elif ADC_AUTO_TRIGGER_SOURCE == TIMER0_OVERFLOW
-			SET_BIT(SFIOR,SFIOR_ADTS_2);
-			CLR_BIT(SFIOR,SFIOR_ADTS_1);
-			CLR_BIT(SFIOR,SFIOR_ADTS_0);
+			SETBIT(SFIOR,SFIOR_ADTS_2);
+			CLEARBIT(SFIOR,SFIOR_ADTS_1);
+			CLEARBIT(SFIOR,SFIOR_ADTS_0);
 	#elif ADC_AUTO_TRIGGER_SOURCE == TIMER1_COMPARE_MATCH_B
-			SET_BIT(SFIOR,SFIOR_ADTS_2);
-			CLR_BIT(SFIOR,SFIOR_ADTS_1);
-			SET_BIT(SFIOR,SFIOR_ADTS_0);
+			SETBIT(SFIOR,SFIOR_ADTS_2);
+			CLEARBIT(SFIOR,SFIOR_ADTS_1);
+			SETBIT(SFIOR,SFIOR_ADTS_0);
 	#elif ADC_AUTO_TRIGGER_SOURCE == TIMER1_OVERFLOW
-			SET_BIT(SFIOR,SFIOR_ADTS_2);
-			SET_BIT(SFIOR,SFIOR_ADTS_1);
-			CLR_BIT(SFIOR,SFIOR_ADTS_0);
+			SETBIT(SFIOR,SFIOR_ADTS_2);
+			SETBIT(SFIOR,SFIOR_ADTS_1);
+			CLEARBIT(SFIOR,SFIOR_ADTS_0);
 	#elif ADC_AUTO_TRIGGER_SOURCE == TIMER1_COMPARE_CAPTURE_MODE
-			SET_BIT(SFIOR,SFIOR_ADTS_2);
-			SET_BIT(SFIOR,SFIOR_ADTS_1);
-			SET_BIT(SFIOR,SFIOR_ADTS_0);
+			SETBIT(SFIOR,SFIOR_ADTS_2);
+			SETBIT(SFIOR,SFIOR_ADTS_1);
+			SETBIT(SFIOR,SFIOR_ADTS_0);
 	#endif
 #endif
 
 #if ADC_INTERRUPT_MODE == ADC_INTERRUPT_OFF
 	/*disable interrupt*/
-	CLR_BIT(ADCSRA, ADIE);
+	CLEARBIT(ADCSRA, ADIE);
 #elif ADC_INTERRUPT_MODE == ADC_INTERRUPT_ON
-	SET_BIT(ADCSRA, ADIE);
+	SETBIT(ADCSRA, ADIE);
 #endif
 
 	/*choosing the prescalar*/
-	CLR_BIT(ADCSRA,ADPS2);
-	CLR_BIT(ADCSRA,ADPS1);
-	CLR_BIT(ADCSRA,ADPS0);
+	CLEARBIT(ADCSRA,ADPS2);
+	CLEARBIT(ADCSRA,ADPS1);
+	CLEARBIT(ADCSRA,ADPS0);
 	ADCSRA |=ADC_PRESCALAR;
 
 	/*enable ADC*/
-	SET_BIT(ADCSRA, ADEN);
+	SETBIT(ADCSRA, ADEN);
 }
 
 uint8 ADC_StartConversion(uint8 copy_channel)
@@ -107,12 +106,12 @@ uint8 ADC_StartConversion(uint8 copy_channel)
 	ADMUX &= 0b11100000;
 	ADMUX |= copy_channel;
 	/*start conversion*/
-	SET_BIT(ADCSRA,ADSC);
+	SETBIT(ADCSRA,ADSC);
 	
-	while(!GET_BIT(ADCSRA,ADIF));
+	while(!GETBIT(ADCSRA,ADIF));
 	
 	/*clearing the flag*/
-	SET_BIT(ADCSRA,ADIF);
+	SETBIT(ADCSRA,ADIF);
 	return ADCH;
 }
 uint8 ADC_uint8_StartConversionSynch(uint8 copy_uint8_channel, uint8* copy_puint8_reading)
@@ -126,16 +125,16 @@ uint8 ADC_uint8_StartConversionSynch(uint8 copy_uint8_channel, uint8* copy_puint
 		ADMUX &= ADMUX_CLEAR;
 		ADMUX |= copy_uint8_channel;
 		/*start conversion*/
-		SET_BIT(ADCSRA,ADSC);
+		SETBIT(ADCSRA,ADSC);
 		/*Polling (busy waiting) until the conversion complete flag is set or counter reach timeout value*/
-		while(GET_BIT(ADCSRA,ADIF)==FALSE &&localTimeOutCounter!= ADC_uint32_TIMEOUT)
+		while(GETBIT(ADCSRA,ADIF)==FALSE &&localTimeOutCounter!= ADC_uint32_TIMEOUT)
 		{
 			localTimeOutCounter++;
 		}
-		if(GET_BIT(ADCSRA,ADIF)==TRUE)
+		if(GETBIT(ADCSRA,ADIF)==TRUE)
 		{
 			/*clearing the flag*/
-			SET_BIT(ADCSRA,ADIF);
+			SETBIT(ADCSRA,ADIF);
 			/*assigning digital value */
 			*copy_puint8_reading = ADCH;
 			ADC_uint8_BusyState = ADC_NOTBUSY;
@@ -183,9 +182,9 @@ uint8 ADC_uint8_StartConversionAsynch(uint8 copy_uint8_channel, uint8* copy_puin
 				ADMUX &= ADMUX_CLEAR;
 				ADMUX |= copy_uint8_channel;
 				/*ADC interrupt Enable*/
-				SET_BIT(ADCSRA,ADIE);
+				SETBIT(ADCSRA,ADIE);
 				/*start conversion*/
-				SET_BIT(ADCSRA,ADSC);
+				SETBIT(ADCSRA,ADSC);
 			}
 	}
 	return localError;
@@ -201,7 +200,7 @@ void __vector_16(void)
 		/*call the call back function in the main application*/
 		ADC_pv_CallBackNotification();
 		/*disable ADC interrupt*/
-		CLR_BIT(ADCSRA,ADIE);
+		CLEARBIT(ADCSRA,ADIE);
 		/*set the ADC to NOTBUSY to start new conversion if requested*/
 		ADC_uint8_BusyState = ADC_NOTBUSY;
  }

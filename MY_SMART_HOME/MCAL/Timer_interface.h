@@ -31,9 +31,13 @@ void Timer1_PWM_Phase_Correct_9_bit(void);
 void Timer1_PWM_Phase_Correct_10_bit(void);
 void Timer1_PWM_Fast_ICR1(uint16 copy_Req_Freq);
 void Timer1_PWM_Phase_Correct_ICR1(uint16 copy_Req_Freq);
-/******************************************TIMER1****************************************************/
+/******************************************Servo-TIMER1****************************************************/
 void Timer1_Servo(uint8 copy_Angle);
 uint8 ADC_To_Angle(uint8 copy_ADC_val);
 
+/******************************************Timer2**********************************************************/
+void Timer2_PWM_Controllable(uint8 copy_Val);
+void Timer2_PWM_Phase_Correct(void);
+void Timer2_PWM_Fast(void);
 
 #endif /* TIMER_INTERFACE_H_*/

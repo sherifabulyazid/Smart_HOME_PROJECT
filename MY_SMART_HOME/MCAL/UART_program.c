@@ -4,8 +4,8 @@
  *  Created on: 5 Jan 2024
  *      Author: Sherif
  */
-#include "STD.h"
-#include "BIT_MATH.h"
+#include "../LIBRARIES/STD.h"
+#include "../LIBRARIES/BIT_MATH.h"
 #include "UART_Register.h"
 #include "UART_Config.h"
 #include "UART_Interface.h"

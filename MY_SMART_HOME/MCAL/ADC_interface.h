@@ -1,5 +1,5 @@
 /**********************************************************
-*Author: Mahmoud Khaled Alnmr
+*Author: Sherif
 *SWC:
 *Layer:
 *Version:

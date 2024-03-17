@@ -1,14 +1,14 @@
-#include "STD.h"
-#include "BIT_MATH.h"
+#include "LIBRARIES/STD.h"
+#include "LIBRARIES/BIT_MATH.h"
 #include <util/delay.h>
-#include "DIO_Interface.h"
-#include "ADC_interface.h"
-#include "LCD_Interface.h"
-#include "Keypad_Interface.h"
-#include "Keypad_config.h"
-#include "Timer_interface.h"
-#include "EEPROM_Interface.h"
-#include "UART_interface.h"
+#include "MCAL/DIO_Interface.h"
+#include "MCAL/ADC_interface.h"
+#include "HAL/LCD_Interface.h"
+#include "HAL/Keypad_Interface.h"
+#include "HAL/Keypad_config.h"
+#include "MCAL/Timer_interface.h"
+#include "HAL/EEPROM_Interface.h"
+#include "MCAL/UART_interface.h"
 
 uint8 stringCompare(uint8* str1, uint8* str2, uint8 Num);
 void Get_password_keypad(void);
@@ -20,11 +20,14 @@ void RemoveUser(uint8* copy_userID);
 uint8 checkLatestUser(void);
 void add_user(void);
 uint8 checkUserID(void);
+void TurnOnLEDs(void);
+void TurnOffLEDs(void);
 
 #define ADMIN_PASS_LOCATION 0x00
 #define USER_PASS_LOCATION 0x14
 #define USER_ID_LOCATION 0x10
 #define MAX_USER_NUM 3
+
 static uint8 valueADC=0;
 static uint32 analogue=0;
 static uint8 temprature=0;
@@ -38,7 +41,9 @@ static uint8 choosenOption =0;
 static uint8 trials=0;
 static uint8 angle=0;
 static uint32 servo_adjust_time=20000;
+static uint32 DimmingAdjTimer=20000;
 static uint8 ADMIN_or_USER=0;
+static uint8 LedsNum=0;
 
 int main (void)
 {
@@ -47,7 +52,14 @@ int main (void)
 	DIO_setPinDirection(DIO_PORTA,PIN6,OUTPUT); // LCD R/W
 	DIO_setPinDirection(DIO_PORTA,PIN7,OUTPUT); //LCD RS
 
-	DIO_setPinDirection(DIO_PORTD,PIN7,OUTPUT);//Lights
+	DIO_setPinDirection(DIO_PORTC,PIN7,OUTPUT);//Buzzer
+	DIO_setPinDirection(DIO_PORTD,PIN2,OUTPUT);//LED1
+	DIO_setPinDirection(DIO_PORTD,PIN3,OUTPUT);//LED2
+	DIO_setPinDirection(DIO_PORTC,PIN6,OUTPUT);//LED3
+	DIO_setPinDirection(DIO_PORTA,PIN3,OUTPUT);//LED4
+	DIO_setPinDirection(DIO_PORTA,PIN4,OUTPUT);//LED5
+
+	DIO_setPinDirection(DIO_PORTD,PIN7,OUTPUT);//Lights Dimming
 	DIO_setPinDirection(DIO_PORTD,PIN4,OUTPUT);//Fan
 	DIO_setPinDirection(DIO_PORTD,PIN5,OUTPUT);//Servo motor
 	Keypad_Init();
@@ -55,7 +67,6 @@ int main (void)
 	LCD_init();
 	UART_Init();
 	EEPROM_INIT();
-
 
 	LCD_SendString("Welcome To SMART HOME");
 	_delay_ms(1000);
@@ -86,7 +97,6 @@ int main (void)
 		Get_password_keypad();
 	}
 
-
 	while(1)
 	{
 		if (ADMIN_or_USER=='1')
@@ -106,7 +116,8 @@ int main (void)
 				LCD_SendString("WRONG ID!");
 				LCD_GoToXY(SecondLine,0);
 				LCD_SendString("System Fail!!");
-				_delay_ms(1000);
+				DIO_setPinVAlue(DIO_PORTC,PIN7,OUTPUT_HIGH);
+				_delay_ms(1500);
 				LCD_ClearDisplay();
 				_delay_ms(2);
 				break;
@@ -119,7 +130,8 @@ int main (void)
 			if(trials==3)
 			{
 				LCD_SendString("System Fail");
-				_delay_ms(1000);
+				DIO_setPinVAlue(DIO_PORTC,PIN7,OUTPUT_HIGH);
+				_delay_ms(1500);
 				LCD_ClearDisplay();
 				_delay_ms(2);
 				break;
@@ -173,7 +185,7 @@ int main (void)
 			}
 			switch(choosenOption)
 			{
-				case '1':
+				case '1':/* Read Current Temperature and Display it on LCD */
 					valueADC= ADC_StartConversion(ADC1);
 					analogue=(uint32)valueADC*5000UL/256UL; //in mV
 					temprature=analogue/10;
@@ -185,30 +197,45 @@ int main (void)
 					LCD_ClearDisplay();
 					_delay_ms(2);
 					break;
-				case '2':
+				case '2':/*Fan on*/
 					DIO_setPinVAlue(DIO_PORTD,PIN4,OUTPUT_HIGH);
 					break;
-				case '3':
+				case '3':/*Fan off*/
 					DIO_setPinVAlue(DIO_PORTD,PIN4,OUTPUT_LOW);
 					break;
-				case '4':
-					DIO_setPinVAlue(DIO_PORTD,PIN7,OUTPUT_HIGH);
+				case '4':/*Leds on*/
+					TurnOnLEDs();
 					break;
-				case '5':
-					DIO_setPinVAlue(DIO_PORTD,PIN7,OUTPUT_LOW);
+				case '5':/*Leds off*/
+					TurnOffLEDs();
 					break;
-				case '6':
-					/*control servo motor using potentiometer*/
-					while(servo_adjust_time)
+				case '6':/*LEDs Dimming*/
+					LCD_SendString("Use Potentiometer");
+					while(DimmingAdjTimer>0)
+					{
+						valueADC=ADC_StartConversion(ADC0);
+						Timer2_PWM_Controllable(valueADC);
+						DimmingAdjTimer--;
+					}
+					DimmingAdjTimer=20000;
+					LCD_ClearDisplay();
+					_delay_ms(2);
+					break;
+				case '7':/*Door*/
+					/*control Servo motor using potentiometer*/
+					LCD_SendString("Use Potentiometer");
+					while(servo_adjust_time>0)
 					{
 						valueADC=ADC_StartConversion(ADC0);
 						angle=ADC_To_Angle(valueADC);
 						Timer1_Servo(angle);
 						servo_adjust_time--;
 					}
-					servo_adjust_time=20000;
+					servo_adjust_time= 20000;
+					LCD_ClearDisplay();
+					_delay_ms(2);
 					break;
-				case '7':
+				case '8':
 					if(ADMIN_or_USER=='1')
 					{
 						add_user();
@@ -221,7 +248,7 @@ int main (void)
 
 					}
 					break;
-				case '8':
+				case '9':
 					if(ADMIN_or_USER=='1')
 					{
 						LCD_SendString("Enter User ID");
@@ -292,6 +319,8 @@ void Get_UserID_keypad(void)
 }
 void Get_password_UART(void)
 {
+	LCD_ClearDisplay();
+	_delay_ms(2);
 	LCD_SendString("Enter Password");
 	UART_sendString("Enter Password: ");
 	LCD_GoToXY(SecondLine, 0);
@@ -319,15 +348,21 @@ void Display_Options(void)
 	LCD_GoToXY(FirstLine, 10);
 	LCD_SendString(" 5-OFF");
 	LCD_GoToXY(SecondLine, 0);
-	LCD_SendString("6-Curtains Angle");
+	LCD_SendString("6-Dimming");
+	_delay_ms(1200);
+	LCD_ClearDisplay();
+	LCD_SendString("7-Door Angle");
 	_delay_ms(1000);
 	LCD_ClearDisplay();
-	LCD_SendString("7-Add User");
-	LCD_GoToXY(SecondLine, 0);
-	LCD_SendString("8-Remove User");
-	_delay_ms(1000);
-	LCD_ClearDisplay();
-	_delay_ms(2);
+	if(ADMIN_or_USER=='1')
+	{
+		LCD_SendString("8-Add User");
+		LCD_GoToXY(SecondLine, 0);
+		LCD_SendString("9-Remove User");
+		_delay_ms(1000);
+		LCD_ClearDisplay();
+		_delay_ms(2);
+	}
 }
 
 uint8 stringCompare(uint8* str1, uint8* str2, uint8 Num)
@@ -442,4 +477,62 @@ uint8 checkUserID(void)
 		}
 	}
 	return FALSE;
+}
+
+void TurnOnLEDs(void)
+{
+	LCD_SendString("Num of LEDs: ");
+	if (ADMIN_or_USER== '1')
+	{
+		UART_sendString(" Num of LEDs:");
+		LedsNum=UART_Receive();
+	}
+	else if (ADMIN_or_USER== '2')
+	{
+		do
+		{
+			LedsNum=get_button_pressed();
+
+		}while(LedsNum==0xff);
+	}
+	if('1'==LedsNum)
+	{
+		DIO_setPinVAlue(DIO_PORTD,PIN2,OUTPUT_HIGH);//LED1
+
+	}
+	else if('2'==LedsNum)
+	{
+		DIO_setPinVAlue(DIO_PORTD,PIN2,OUTPUT_HIGH);//LED1
+		DIO_setPinVAlue(DIO_PORTD,PIN3,OUTPUT_HIGH);//LED2
+	}
+	else if('3'==LedsNum)
+	{
+		DIO_setPinVAlue(DIO_PORTD,PIN2,OUTPUT_HIGH);//LED1
+		DIO_setPinVAlue(DIO_PORTD,PIN3,OUTPUT_HIGH);//LED2
+		DIO_setPinVAlue(DIO_PORTC,PIN6,OUTPUT_HIGH);//LED3
+	}
+	else if('4'==LedsNum)
+	{
+		DIO_setPinVAlue(DIO_PORTD,PIN2,OUTPUT_HIGH);//LED1
+		DIO_setPinVAlue(DIO_PORTD,PIN3,OUTPUT_HIGH);//LED2
+		DIO_setPinVAlue(DIO_PORTC,PIN6,OUTPUT_HIGH);//LED3
+		DIO_setPinVAlue(DIO_PORTA,PIN3,OUTPUT_HIGH);//LED4
+	}
+	else if('5'==LedsNum)
+	{
+		DIO_setPinVAlue(DIO_PORTD,PIN2,OUTPUT_HIGH);//LED1
+		DIO_setPinVAlue(DIO_PORTD,PIN3,OUTPUT_HIGH);//LED2
+		DIO_setPinVAlue(DIO_PORTC,PIN6,OUTPUT_HIGH);//LED3
+		DIO_setPinVAlue(DIO_PORTA,PIN3,OUTPUT_HIGH);//LED4
+		DIO_setPinVAlue(DIO_PORTA,PIN4,OUTPUT_HIGH);//LED5
+	}
+
+}
+void TurnOffLEDs(void)
+{
+	DIO_setPinVAlue(DIO_PORTD,PIN2,OUTPUT_LOW);//LED1
+	DIO_setPinVAlue(DIO_PORTD,PIN3,OUTPUT_LOW);//LED2
+	DIO_setPinVAlue(DIO_PORTC,PIN6,OUTPUT_LOW);//LED3
+	DIO_setPinVAlue(DIO_PORTA,PIN3,OUTPUT_LOW);//LED4
+	DIO_setPinVAlue(DIO_PORTA,PIN4,OUTPUT_LOW);//LED5
 }

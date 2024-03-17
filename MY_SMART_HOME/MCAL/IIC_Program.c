@@ -5,8 +5,8 @@
  *      Author: Sherif
  */
 
-#include "STD.h"
-#include "BIT_MATH.h"
+#include "../LIBRARIES/STD.h"
+#include "../LIBRARIES/BIT_MATH.h"
 #include "IIC_Registers.h"
 #include "IIC_Config.h"
 #include "IIC_Interface.h"

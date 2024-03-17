@@ -5,13 +5,13 @@
  *      Author: hp
  */
 #include <util/delay.h>
-#include "STD.h"
-#include "BIT_MATH.h"
-#include "IIC_Interface.h"
+#include "../LIBRARIES/STD.h"
+#include "../LIBRARIES/BIT_MATH.h"
+#include "../MCAL/IIC_Interface.h"
 #include "EEPROM_Config.h"
 #include "EEPROM_Interface.h"
 #include "EEPROM_Private.h"
-#include "IIC_Registers.h"
+#include "../MCAL/IIC_Registers.h"
 
 void EEPROM_INIT(void)
 {

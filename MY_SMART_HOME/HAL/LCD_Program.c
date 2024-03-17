@@ -5,10 +5,10 @@
  *      Author: Sherif
  */
 #include <util/delay.h>
-#include "STD.h"
-#include "BIT_MATH.h"
-#include "DIO_Interface.h"
-#include "DIO_Register.h"
+#include "../LIBRARIES/STD.h"
+#include "../LIBRARIES/BIT_MATH.h"
+#include "../MCAL/DIO_Interface.h"
+#include "../MCAL/DIO_Register.h"
 #include "LCD_Interface.h"
 
 #define MODE_4BITS 1

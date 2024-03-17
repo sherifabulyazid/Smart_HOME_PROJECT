@@ -4,9 +4,8 @@
  *  Created on: Dec 8, 2023
  *      Author: hp
  */
-#include "STD.h"
-#include "BIT_MATH.h"
-
+#include "../LIBRARIES/STD.h"
+#include "../LIBRARIES/BIT_MATH.h"
 #include "DIO_Config.h"
 #include "DIO_Interface.h"
 #include "DIO_Private.h"

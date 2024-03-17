@@ -4,11 +4,10 @@
  *  Created on: Dec 16, 2023
  *      Author: hp
  */
-#include "STD.h"
-#include "BIT_MATH.h"
-#include "DIO_Register.h"
-#include "DIO_Interface.h"
-#include "LCD_Interface.h"
+#include "../LIBRARIES/STD.h"
+#include "../LIBRARIES/BIT_MATH.h"
+#include "../MCAL/DIO_Register.h"
+#include "../MCAL/DIO_Interface.h"
 #include "Keypad_config.h"
 #include "Keypad_Interface.h"
 

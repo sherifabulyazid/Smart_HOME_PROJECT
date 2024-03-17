@@ -17,7 +17,7 @@
 #define CLOCK_DIV_BY_1024       0X05
 #define EXTERNAL_CLOCK_FALLING  0X06
 #define EXTERNAL_CLOCK_RISING   0X07
-#define CLOCKSELECT		 CLOCK_DIV_BY_8  // <<<<<---------
+#define CLOCKSELECT		 CLOCK_DIV_BY_8  	// <<<<<---------
 
 /**********************************************Timer0**************************************************/
 
@@ -76,3 +76,18 @@
 #define TIMER1_COMPARE_MATCH_VALUE_B		1500   // <<<<<---------
 
 #endif /* TIMER_CONFIG_H_*/
+
+/****************************************Timer2************************************************/
+/* Compare Output Mode, PWM Mode
+   COM21 COM20
+ */
+
+#define OC2_disconnected    0x00
+#define non_inverting  		0x20
+#define inverting 		    0x30
+#define OC2_PWM_MODE	 non_inverting    // <<<<<---------
+
+/*compare match value*/
+#define TIMER2_COMPARE_MATCH_VALUE		100   // <<<<<---------
+
+

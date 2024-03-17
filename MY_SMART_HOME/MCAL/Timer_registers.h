@@ -76,3 +76,19 @@
 #define OCR1AL   *((volatile uint16*)0x4A)
 #define OCR1BL   *((volatile uint16*)0x48)
 #endif /* TIMER_REGISTERS_H_*/
+/******************************************TIMER2****************************************************/
+#define TCNT2	(*(volatile uint8*)(0x44))
+
+#define TCCR2	(*(volatile uint8*)(0x45))
+
+#define TCCR2_FOC2			7
+#define TCCR2_WGM20			6
+#define TCCR2_COM21			5
+#define TCCR2_COM20			4
+#define TCCR2_WGM21			3
+#define TCCR2_CS22			2
+#define TCCR2_CS21			1
+#define TCCR2_CS20			0
+
+#define OCR2	(*(volatile uint8*)(0x43))
+
