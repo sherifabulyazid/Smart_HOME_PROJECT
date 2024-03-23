@@ -22,11 +22,11 @@ void add_user(void);
 uint8 checkUserID(void);
 void TurnOnLEDs(void);
 void TurnOffLEDs(void);
-
+void AC_Control(void);
 #define ADMIN_PASS_LOCATION 0x00
 #define USER_PASS_LOCATION 0x14
 #define USER_ID_LOCATION 0x10
-#define MAX_USER_NUM 3
+#define MAX_USER_NUM 6
 
 static uint8 valueADC=0;
 static uint32 analogue=0;
@@ -39,8 +39,6 @@ static uint8 passStatus=2;
 static uint8 iterator=0;
 static uint8 choosenOption =0;
 static uint8 trials=0;
-static uint8 angle=0;
-static uint32 servo_adjust_time=20000;
 static uint32 DimmingAdjTimer=20000;
 static uint8 ADMIN_or_USER=0;
 static uint8 LedsNum=0;
@@ -168,8 +166,8 @@ int main (void)
 		}
 		else if(passStatus==TRUE)
 		{
-
 			Display_Options();
+			AC_Control();
 			if (ADMIN_or_USER=='1')
 			{
 				UART_sendString("  Enter Option: ");
@@ -185,7 +183,8 @@ int main (void)
 			}
 			switch(choosenOption)
 			{
-				case '1':/* Read Current Temperature and Display it on LCD */
+				case '0':/* Read Current Temperature and Display it on LCD */
+
 					valueADC= ADC_StartConversion(ADC1);
 					analogue=(uint32)valueADC*5000UL/256UL; //in mV
 					temprature=analogue/10;
@@ -197,19 +196,21 @@ int main (void)
 					LCD_ClearDisplay();
 					_delay_ms(2);
 					break;
-				case '2':/*Fan on*/
+				case '1':/*AC on*/
 					DIO_setPinVAlue(DIO_PORTD,PIN4,OUTPUT_HIGH);
+					_delay_ms(2000);
 					break;
-				case '3':/*Fan off*/
+				case '2':/*AC off*/
 					DIO_setPinVAlue(DIO_PORTD,PIN4,OUTPUT_LOW);
+					_delay_ms(2000);
 					break;
-				case '4':/*Leds on*/
+				case '3':/*Leds on*/
 					TurnOnLEDs();
 					break;
-				case '5':/*Leds off*/
+				case '4':/*Leds off*/
 					TurnOffLEDs();
 					break;
-				case '6':/*LEDs Dimming*/
+				case '5':/*LEDs Dimming*/
 					LCD_SendString("Use Potentiometer");
 					while(DimmingAdjTimer>0)
 					{
@@ -221,47 +222,47 @@ int main (void)
 					LCD_ClearDisplay();
 					_delay_ms(2);
 					break;
-				case '7':/*Door*/
-					/*control Servo motor using potentiometer*/
-					LCD_SendString("Use Potentiometer");
-					while(servo_adjust_time>0)
+				case '6':/*Door Open*/
+					/*Set Servo angle to 90 degree*/
+					if(ADMIN_or_USER=='1')
 					{
-						valueADC=ADC_StartConversion(ADC0);
-						angle=ADC_To_Angle(valueADC);
-						Timer1_Servo(angle);
-						servo_adjust_time--;
+						Timer1_Servo(90);
 					}
-					servo_adjust_time= 20000;
-					LCD_ClearDisplay();
-					_delay_ms(2);
+					else
+					{
+						LCD_SendString("NOT ACCESSIBLE!");
+						_delay_ms(1000);
+						LCD_ClearDisplay();
+						_delay_ms(2);
+					}
 					break;
-				case '8':
+				case '7':/*Door Close*/
+					/*Set Servo angle to 90 degree*/
+					Timer1_Servo(0);
+					break;
+				case '8':/*Add User*/
 					if(ADMIN_or_USER=='1')
 					{
 						add_user();
 					}
 					else
 					{
-						LCD_SendString("NOT ACCESSIBLE!");
-						LCD_ClearDisplay();
-						_delay_ms(2);
 
 					}
 					break;
-				case '9':
+				case '9':/*Remove User*/
 					if(ADMIN_or_USER=='1')
 					{
 						LCD_SendString("Enter User ID");
-						UART_sendString("Enter User ID: ");
+						UART_sendString(" Enter User ID: ");
 						UART_recieve_string(IDArr);
 						LCD_ClearDisplay();
 						_delay_ms(2);
-						RemoveUser(IDArr);					}
+						RemoveUser(IDArr);
+					}
 					else
 					{
-						LCD_SendString("NOT ACCESSIBLE!");
-						LCD_ClearDisplay();
-						_delay_ms(2);
+
 					}
 					break;
 				default:
@@ -272,6 +273,40 @@ int main (void)
 	return 0;
 }
 
+
+void Display_Options(void)
+{
+
+	LCD_SendString("0-Display Temp");
+	LCD_GoToXY(SecondLine, 0);
+	LCD_SendString("AC: 1-ON");
+	LCD_GoToXY(SecondLine, 9);
+	LCD_SendString(" 2-OFF");
+	_delay_ms(1000);
+	LCD_ClearDisplay();
+	_delay_ms(2);
+	LCD_SendString("LEDs: 3-ON");
+	LCD_GoToXY(FirstLine, 10);
+	LCD_SendString(" 4-OFF");
+	LCD_GoToXY(SecondLine, 0);
+	LCD_SendString("5-Dimming");
+	_delay_ms(1200);
+	LCD_ClearDisplay();
+	LCD_SendString("6-Door Open");
+	LCD_GoToXY(SecondLine, 0);
+	LCD_SendString("7-Door Close");
+	_delay_ms(1000);
+	LCD_ClearDisplay();
+	if(ADMIN_or_USER=='1')
+	{
+		LCD_SendString("8-Add User");
+		LCD_GoToXY(SecondLine, 0);
+		LCD_SendString("9-Remove User");
+		_delay_ms(1000);
+		LCD_ClearDisplay();
+		_delay_ms(2);
+	}
+}
 
 
 void Get_password_keypad(void)
@@ -331,38 +366,6 @@ void Get_password_UART(void)
 	_delay_ms(500);
 	LCD_ClearDisplay();
 	_delay_ms(2);
-}
-
-void Display_Options(void)
-{
-
-	LCD_SendString("1-Display Temp");
-	LCD_GoToXY(SecondLine, 0);
-	LCD_SendString("Fan: 2-ON");
-	LCD_GoToXY(SecondLine, 9);
-	LCD_SendString(" 3-OFF");
-	_delay_ms(1000);
-	LCD_ClearDisplay();
-	_delay_ms(2);
-	LCD_SendString("LEDs: 4-ON");
-	LCD_GoToXY(FirstLine, 10);
-	LCD_SendString(" 5-OFF");
-	LCD_GoToXY(SecondLine, 0);
-	LCD_SendString("6-Dimming");
-	_delay_ms(1200);
-	LCD_ClearDisplay();
-	LCD_SendString("7-Door Angle");
-	_delay_ms(1000);
-	LCD_ClearDisplay();
-	if(ADMIN_or_USER=='1')
-	{
-		LCD_SendString("8-Add User");
-		LCD_GoToXY(SecondLine, 0);
-		LCD_SendString("9-Remove User");
-		_delay_ms(1000);
-		LCD_ClearDisplay();
-		_delay_ms(2);
-	}
 }
 
 uint8 stringCompare(uint8* str1, uint8* str2, uint8 Num)
@@ -443,11 +446,11 @@ void RemoveUser(uint8* copy_userID)
 			EEPROM_voidRemoveUser(USER_ID_LOCATION + 0x10* i);
 			LCD_SendString("User's been deleted Successfully");
 			UART_sendString("User's been deleted Successfully");
-			_delay_ms(750);
+			_delay_ms(1000);
 			break;
 		}
 	}
-	if (i == (MAX_USER_NUM - 1))
+	if (i == MAX_USER_NUM )
 	{
 		/*Send by uart "ID does not exist"*/
 		LCD_SendString("ID does not exist");
@@ -535,4 +538,24 @@ void TurnOffLEDs(void)
 	DIO_setPinVAlue(DIO_PORTC,PIN6,OUTPUT_LOW);//LED3
 	DIO_setPinVAlue(DIO_PORTA,PIN3,OUTPUT_LOW);//LED4
 	DIO_setPinVAlue(DIO_PORTA,PIN4,OUTPUT_LOW);//LED5
+}
+
+
+void AC_Control(void)
+{
+	valueADC= ADC_StartConversion(ADC1);
+	analogue=(uint32)valueADC*5000UL/256UL; //in mV
+	temprature=analogue/10;
+	if(temprature>28)
+	{
+		DIO_setPinVAlue(DIO_PORTD,PIN4,OUTPUT_HIGH);
+	}
+	else if (temprature<21)
+	{
+		DIO_setPinVAlue(DIO_PORTD,PIN4,OUTPUT_LOW);
+	}
+	else
+	{
+		/* No Change */
+	}
 }
